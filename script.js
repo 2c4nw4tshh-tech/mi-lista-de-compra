@@ -1,6 +1,24 @@
 // ============================================
-// MI LISTA DE COMPRA
+// MI LISTA DE COMPRA + SUPABASE
 // ============================================
+
+
+// --------------------------------------------
+// CONFIGURACIÓN DE SUPABASE
+// --------------------------------------------
+
+const SUPABASE_URL =
+    "https://kaptaotwfsxhldrmuage.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_vTZpBPCkgNW6hG6EYotv4A_p2znAPGG";
+
+
+const supabaseClient =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
 
 // --------------------------------------------
@@ -37,53 +55,32 @@ let products = [];
 
 
 // --------------------------------------------
-// CARGAR LISTA GUARDADA
+// CARGAR PRODUCTOS DESDE SUPABASE
 // --------------------------------------------
 
-const savedProducts =
-    localStorage.getItem("miListaCompra");
+async function loadProducts() {
 
-if (savedProducts) {
+    const { data, error } =
+        await supabaseClient
+            .from("products")
+            .select("*")
+            .order("created_at", {
+                ascending: true
+            });
 
-    try {
+    if (error) {
 
-        products = JSON.parse(savedProducts);
+        console.error(
+            "Error cargando productos:",
+            error
+        );
 
-        // Compatibilidad con productos creados
-        // en la versión anterior.
-
-        products = products.map(product => ({
-
-            name: product.name,
-
-            completed:
-                product.completed || false,
-
-            quantity:
-                product.quantity || 1
-
-        }));
-
-    } catch (error) {
-
-        products = [];
-
+        return;
     }
 
-}
+    products = data || [];
 
-
-// --------------------------------------------
-// GUARDAR
-// --------------------------------------------
-
-function saveProducts() {
-
-    localStorage.setItem(
-        "miListaCompra",
-        JSON.stringify(products)
-    );
-
+    renderProducts();
 }
 
 
@@ -93,21 +90,15 @@ function saveProducts() {
 
 function renderProducts() {
 
-    // Eliminamos los productos actuales.
-
     const existingProducts =
         shoppingList.querySelectorAll(
             ".product-item"
         );
 
     existingProducts.forEach(product => {
-
         product.remove();
-
     });
 
-
-    // Si la lista está vacía...
 
     if (products.length === 0) {
 
@@ -119,8 +110,6 @@ function renderProducts() {
         emptyMessage.style.display =
             "none";
 
-
-        // Creamos cada producto.
 
         products.forEach((product, index) => {
 
@@ -172,8 +161,6 @@ function renderProducts() {
                 "quantity-controls";
 
 
-            // BOTÓN MENOS
-
             const decreaseButton =
                 document.createElement("button");
 
@@ -187,8 +174,6 @@ function renderProducts() {
                 "Reducir cantidad";
 
 
-            // NÚMERO
-
             const quantityNumber =
                 document.createElement("span");
 
@@ -198,8 +183,6 @@ function renderProducts() {
             quantityNumber.textContent =
                 product.quantity;
 
-
-            // BOTÓN MÁS
 
             const increaseButton =
                 document.createElement("button");
@@ -213,8 +196,6 @@ function renderProducts() {
             increaseButton.title =
                 "Aumentar cantidad";
 
-
-            // Añadimos controles.
 
             quantityControls.appendChild(
                 decreaseButton
@@ -252,14 +233,28 @@ function renderProducts() {
 
             checkbox.addEventListener(
                 "change",
-                () => {
+                async () => {
 
-                    products[index].completed =
-                        checkbox.checked;
+                    const { error } =
+                        await supabaseClient
+                            .from("products")
+                            .update({
+                                completed:
+                                    checkbox.checked
+                            })
+                            .eq(
+                                "id",
+                                product.id
+                            );
 
-                    saveProducts();
+                    if (error) {
 
-                    renderProducts();
+                        console.error(
+                            "Error actualizando producto:",
+                            error
+                        );
+
+                    }
 
                 }
             );
@@ -271,17 +266,42 @@ function renderProducts() {
 
             decreaseButton.addEventListener(
                 "click",
-                () => {
+                async () => {
 
                     if (
-                        products[index].quantity > 1
+                        product.quantity > 1
                     ) {
 
-                        products[index].quantity--;
+                        const newQuantity =
+                            product.quantity - 1;
 
-                        saveProducts();
+                        const { error } =
+                            await supabaseClient
+                                .from("products")
+                                .update({
+                                    quantity:
+                                        newQuantity
+                                })
+                                .eq(
+                                    "id",
+                                    product.id
+                                );
 
-                        renderProducts();
+                        if (error) {
+
+                            console.error(
+                                "Error reduciendo cantidad:",
+                                error
+                            );
+
+                            return;
+                        }
+
+                        product.quantity =
+                            newQuantity;
+
+                        quantityNumber.textContent =
+                            newQuantity;
 
                     }
 
@@ -295,13 +315,38 @@ function renderProducts() {
 
             increaseButton.addEventListener(
                 "click",
-                () => {
+                async () => {
 
-                    products[index].quantity++;
+                    const newQuantity =
+                        product.quantity + 1;
 
-                    saveProducts();
+                    const { error } =
+                        await supabaseClient
+                            .from("products")
+                            .update({
+                                quantity:
+                                    newQuantity
+                            })
+                            .eq(
+                                "id",
+                                product.id
+                            );
 
-                    renderProducts();
+                    if (error) {
+
+                        console.error(
+                            "Error aumentando cantidad:",
+                            error
+                        );
+
+                        return;
+                    }
+
+                    product.quantity =
+                        newQuantity;
+
+                    quantityNumber.textContent =
+                        newQuantity;
 
                 }
             );
@@ -313,13 +358,26 @@ function renderProducts() {
 
             deleteButton.addEventListener(
                 "click",
-                () => {
+                async () => {
 
-                    products.splice(index, 1);
+                    const { error } =
+                        await supabaseClient
+                            .from("products")
+                            .delete()
+                            .eq(
+                                "id",
+                                product.id
+                            );
 
-                    saveProducts();
+                    if (error) {
 
-                    renderProducts();
+                        console.error(
+                            "Error eliminando producto:",
+                            error
+                        );
+
+                        return;
+                    }
 
                 }
             );
@@ -354,8 +412,6 @@ function renderProducts() {
     }
 
 
-    // Actualizamos contador.
-
     updateCounter();
 
 }
@@ -389,13 +445,11 @@ function updateCounter() {
 // AÑADIR PRODUCTO
 // --------------------------------------------
 
-function addProduct() {
+async function addProduct() {
 
     const name =
         productInput.value.trim();
 
-
-    // Evitamos productos vacíos.
 
     if (name === "") {
 
@@ -406,30 +460,26 @@ function addProduct() {
     }
 
 
-    // Creamos el producto.
-
-    products.push({
-
-        name: name,
-
-        completed: false,
-
-        quantity: 1
-
-    });
+    const { error } =
+        await supabaseClient
+            .from("products")
+            .insert({
+                name: name,
+                completed: false,
+                quantity: 1
+            });
 
 
-    // Guardamos.
+    if (error) {
 
-    saveProducts();
+        console.error(
+            "Error añadiendo producto:",
+            error
+        );
 
+        return;
+    }
 
-    // Actualizamos.
-
-    renderProducts();
-
-
-    // Limpiamos el campo.
 
     productInput.value = "";
 
@@ -472,9 +522,7 @@ productInput.addEventListener(
 
 completedButton.addEventListener(
     "click",
-    () => {
-
-        // Si no hay productos...
+    async () => {
 
         if (products.length === 0) {
 
@@ -485,29 +533,28 @@ completedButton.addEventListener(
         }
 
 
-        // Vaciar lista.
-
-        products = [];
-
-
-        // Guardar lista vacía.
-
-        saveProducts();
+        const { error } =
+            await supabaseClient
+                .from("products")
+                .delete()
+                .neq("id", 0);
 
 
-        // Actualizar pantalla.
+        if (error) {
 
-        renderProducts();
+            console.error(
+                "Error vaciando la lista:",
+                error
+            );
 
+            return;
+        }
 
-        // Mostrar mensaje.
 
         successMessage.classList.add(
             "show"
         );
 
-
-        // Ocultar mensaje después.
 
         setTimeout(() => {
 
@@ -522,7 +569,34 @@ completedButton.addEventListener(
 
 
 // --------------------------------------------
+// ACTUALIZACIONES EN TIEMPO REAL
+// --------------------------------------------
+
+supabaseClient
+    .channel("products-changes")
+    .on(
+        "postgres_changes",
+        {
+            event: "*",
+            schema: "public",
+            table: "products"
+        },
+        payload => {
+
+            console.log(
+                "Cambio recibido:",
+                payload
+            );
+
+            loadProducts();
+
+        }
+    )
+    .subscribe();
+
+
+// --------------------------------------------
 // INICIAR APLICACIÓN
 // --------------------------------------------
 
-renderProducts();
+loadProducts();
