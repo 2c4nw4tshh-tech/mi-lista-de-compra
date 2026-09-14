@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mi Lista de Compra 🛒</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="app">
+
+        <!-- CABECERA -->
+        <header class="header">
+            <div class="cart-icon">🛒</div>
+
+            <div>
+                <h1>Mi Lista de Compra</h1>
+                <p>¿Qué necesitamos hoy?</p>
+            </div>
+        </header>
+
+
+        <!-- AÑADIR PRODUCTO -->
+        <section class="add-section">
+
+            <input
+                type="text"
+                id="productInput"
+                placeholder="Escribe un producto..."
+                autocomplete="off"
+            >
+
+            <button id="addButton">
+                <span>＋</span>
+                Añadir
+            </button>
+
+        </section>
+
+        <!-- FAVORITOS -->
+        <section id="favoritesSection" class="favorites-section">
+
+            <div class="favorites-title">
+                ⭐ Favoritos
+            </div>
+
+            <div id="favoritesList" class="favorites-list"></div>
+
+        </section>
+        <!-- CABECERA DE LA LISTA -->
+        <div class="list-header">
+
+            <h2>🛍️ Productos</h2>
+
+            <span id="productCount">
+                0 productos
+            </span>
+
+        </div>
+
+
+        <!-- LISTA -->
+        <section id="shoppingList" class="shopping-list">
+
+            <div id="emptyMessage" class="empty-message">
+
+                <div class="empty-icon">🛒</div>
+
+                <h3>Tu lista está vacía</h3>
+
+                <p>
+                    Añade algo que necesites comprar.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- COMPRA HECHA -->
+        <button id="completedButton" class="completed-button">
+
+            <span>🛍️</span>
+
+            <span>COMPRA HECHA</span>
+
+        </button>
+
+
+        <!-- MENSAJE DE ÉXITO -->
+        <div id="successMessage" class="success-message">
+
+            <div class="success-icon">🎉</div>
+
+            <h2>¡Compra completada!</h2>
+
+            <p>
+                Tu lista está preparada para la próxima compra.
+            </p>
+
+        </div>
+
+
+        <footer>
+            <p>Hecho para no olvidar nada 🛒</p>
+        </footer>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
